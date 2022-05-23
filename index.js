@@ -52,7 +52,7 @@ async function run() {
             res.send(oneData);
         });
 
-        //update or insert data
+        //update or insert user data 
         app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
             const user = req.body;
@@ -63,8 +63,26 @@ async function run() {
             };
             const result = await userCollection.updateOne(filter, updatedoc, options);
             const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            console.log(token)
             res.send({ result, token });
         });
+
+        //make addmin 
+        app.put('/user/admin/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const updatedoc = {
+                $set: { role: "admin" },
+            };
+            const result = await userCollection.updateOne(filter, updatedoc);
+            console.log('hits')
+            res.send({ result });
+        });
+        //all users api
+        app.get('/users', verifyJWT, async (req, res) => {
+            const users = await userCollection.find().toArray();
+            res.send(users)
+        })
 
     }
     finally { }
