@@ -4,7 +4,8 @@ const cors = require("cors");
 require("dotenv").config();
 const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+
 
 app.use(express.json());
 app.use(cors());
@@ -41,6 +42,14 @@ async function run() {
             const cursor = assignment12Collection.find(query)
             const allData = await cursor.toArray();
             res.send(allData);
+        });
+
+        // get One data
+        app.get('/data/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: ObjectId(id) };
+            const oneData = await assignment12Collection.findOne(query);
+            res.send(oneData);
         });
 
         //update or insert data
