@@ -68,14 +68,13 @@ async function run() {
         });
 
         //make addmin 
-        app.put('/user/admin/:email', verifyJWT, async (req, res) => {
+        app.put('/user/admin/:email', async (req, res) => {
             const email = req.params.email;
             const filter = { email: email };
             const updatedoc = {
                 $set: { role: "admin" },
             };
             const result = await userCollection.updateOne(filter, updatedoc);
-            console.log('hits')
             res.send({ result });
         });
         //all users api
