@@ -63,19 +63,32 @@ async function run() {
             };
             const result = await userCollection.updateOne(filter, updatedoc, options);
             const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
-            console.log(token)
             res.send({ result, token });
         });
 
-        //make addmin 
-        app.put('/user/admin/:email', async (req, res) => {
+        app.get('/admin/:email', async (req, res) => {
             const email = req.params.email;
-            const filter = { email: email };
-            const updatedoc = {
-                $set: { role: "admin" },
-            };
-            const result = await userCollection.updateOne(filter, updatedoc);
-            res.send({ result });
+            const user = await userCollection.findOne({ email: email });
+            const isAdmin = user.role === 'admin';
+            res.send({ admin: isAdmin })
+        })
+
+        //make addmin 
+        app.put('/user/admin/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            const requester = req.decoded.email;
+            const requesterAccount = await userCollection.findOne({ email: requester });
+            if (requesterAccount.role === 'admin') {
+                const filter = { email: email };
+                const updatedoc = {
+                    $set: { role: "admin" },
+                };
+                const result = await userCollection.updateOne(filter, updatedoc);
+                res.send({ result });
+            }
+            else {
+                res.status(403).send({ message: 'forbidden' });
+            }
         });
         //all users api
         app.get('/users', verifyJWT, async (req, res) => {
