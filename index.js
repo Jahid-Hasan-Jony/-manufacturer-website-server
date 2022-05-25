@@ -35,6 +35,7 @@ async function run() {
         await client.connect()
         const assignment12Collection = client.db('assignment12').collection('data');
         const userCollection = client.db('assignment12').collection('users');
+        const userOrders = client.db('assignment12').collection('myOrders');
 
         // get all data
         app.get('/data', async (req, res) => {
@@ -95,6 +96,19 @@ async function run() {
             const users = await userCollection.find().toArray();
             res.send(users)
         })
+
+        //update or insert user orders
+        app.put('/orders/:email', async (req, res) => {
+            const user = req.body;
+            const id = user.id;
+            const filter = { id: id };
+            const options = { upsert: true };
+            const updatedoc = {
+                $set: user,
+            };
+            const result = await userOrders.updateOne(filter, updatedoc, options);
+            res.send({ result });
+        });
 
     }
     finally { }
