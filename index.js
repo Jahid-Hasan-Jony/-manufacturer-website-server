@@ -110,6 +110,21 @@ async function run() {
             res.send({ result });
         });
 
+        //all users api
+        app.get('/allOrders/:email', async (req, res) => {
+            const email = req.params.email;
+            const orders = await userOrders.find({ email: email }).toArray();
+            res.send(orders)
+        })
+
+        // delete order item
+        app.delete('/allOrders/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await userOrders.deleteOne(query);
+            res.send(result);
+        })
+
     }
     finally { }
 }
