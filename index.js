@@ -38,6 +38,7 @@ async function run() {
         const assignment12Collection = client.db('assignment12').collection('data');
         const userCollection = client.db('assignment12').collection('users');
         const userOrders = client.db('assignment12').collection('myOrders');
+        const userReview = client.db('assignment12').collection('review');
 
         // get all data
         app.get('/data', async (req, res) => {
@@ -45,6 +46,20 @@ async function run() {
             const cursor = assignment12Collection.find(query)
             const allData = await cursor.toArray();
             res.send(allData);
+        });
+
+        //insert dataa 
+        app.post('/data', async (req, res) => {
+            const product = req.body;
+            const result = await assignment12Collection.insertOne(product)
+            res.send(result);
+        });
+
+        //insert Review dataa 
+        app.post('/review', async (req, res) => {
+            const product = req.body;
+            const result = await userReview.insertOne(product)
+            res.send(result);
         });
 
         // get One data
@@ -65,7 +80,7 @@ async function run() {
                 $set: user,
             };
             const result = await userCollection.updateOne(filter, updatedoc, options);
-            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' })
             res.send({ result, token });
         });
 
@@ -96,6 +111,13 @@ async function run() {
         //all users api
         app.get('/users', verifyJWT, async (req, res) => {
             const users = await userCollection.find().toArray();
+            res.send(users)
+        })
+
+        //one users api
+        app.get('/users/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            const users = await userCollection.findOne({ email: email })
             res.send(users)
         })
 
@@ -135,6 +157,14 @@ async function run() {
             res.send(result);
         })
 
+        // delete Product
+        app.delete('/data/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await assignment12Collection.deleteOne(query);
+            res.send(result);
+        })
+
         // payment intent api
         app.post('/create-payment-intent', verifyJWT, async (req, res) => {
             const service = req.body;
@@ -147,6 +177,45 @@ async function run() {
             })
             res.send({ clientSecret: paymentIntent.client_secret })
         })
+
+        // payment success api
+        app.patch('/payment/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const payment = req.body;
+            const filter = { _id: ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    paid: true,
+                    transactionId: payment.transactionId
+                }
+            }
+            const updateOrderInfo = await userOrders.updateOne(filter, updatedDoc)
+            res.send(updatedDoc)
+        })
+
+
+        //update or insert user orders
+        app.patch('/updateUser/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id)
+            const info = req.body;
+            const filter = { _id: ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    name: info?.name,
+                    email: info?.email,
+                    number: info?.number,
+                    educationQuality: info?.educationQuality,
+                    address: info?.address,
+                    facebook: info?.facebook,
+                    linkedIn: info?.linkedIn,
+                    github: info?.github
+                }
+            }
+            const updateUserInfo = await userCollection.updateOne(filter, updatedDoc)
+            res.send(updatedDoc)
+        })
+
 
     }
     finally { }
