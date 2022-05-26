@@ -48,6 +48,14 @@ async function run() {
             res.send(allData);
         });
 
+        // get all review
+        app.get('/review', async (req, res) => {
+            const query = {};
+            const cursor = userReview.find(query)
+            const allData = await cursor.toArray();
+            res.send(allData);
+        });
+
         //insert dataa 
         app.post('/data', async (req, res) => {
             const product = req.body;
